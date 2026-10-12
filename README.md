@@ -1,36 +1,47 @@
-# Reklama5 Watcher – локална апликација 🏠
+# Reklama5 Watcher 🏠
 
-Flask апликација што ги следи огласите на reklama5.mk според твоите филтри. Огласите ги прикажува на `http://127.0.0.1:5000`, а за нов оглас ти праќа нотификација на телефон.
+A local web app that tracks apartment listings on [reklama5.mk](https://www.reklama5.mk) (the largest classifieds site in North Macedonia) using custom filters, and sends a **Telegram notification** when a new listing appears.
 
-## Пуштање
+I built it to follow the apartment market in Bitola and Ohrid, then used the collected data to practice **SQL, Excel and Power BI** analysis.
+
+![Power BI dashboard](dashboard.png)
+
+## Features
+
+- **Web scraper** (requests + BeautifulSoup) that parses price, m², rooms, city and posting date
+- **Custom filters**: city, category, price range, m², rooms, required / excluded keywords
+- **Background checks** every N minutes, with Telegram or ntfy push notifications
+- **Web UI** (Flask): listing cards, "new" badges, favorites, hide, sorting by price / size
+- **SQLite** storage, with listings linked to the filter that found them
+
+## Data analysis
+
+The collected data is analysed in three ways:
+
+| Tool | What I did |
+|---|---|
+| **SQL** | Aggregations, `GROUP BY` / `HAVING`, `CASE WHEN` price bands, `JOIN`s, NULL handling (`sql_zadaci.py`) |
+| **Excel** | Tables, `AVERAGEIFS` / `COUNTIF`, PivotTables and PivotCharts |
+| **Power BI** | KPI cards, slicers, cross-filtering, DAX measures (`CALCULATE`, `DIVIDE`) |
+
+**Example findings:**
+- Ohrid listings were about **40% more expensive per m²** than Bitola (≈1,230 vs ≈870 €/m²), even though the Ohrid apartments were smaller on average.
+- A single listing without m² was inflating the "price per m²" figure. I fixed this with `CALCULATE(..., NOT ISBLANK(m2))`.
+- The dataset only contains listings that passed the filters (for example, ads with "price on request" are excluded), which limits what conclusions can be drawn from it.
+
+## Tech stack
+
+Python · Flask · BeautifulSoup · SQLite · openpyxl · Power BI · Excel
+
+## Run locally
 
 ```bash
+python -m venv .venv
+.venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 python app.py
 ```
 
-Отвори **http://127.0.0.1:5000**
+Open **http://127.0.0.1:5000**, add a filter, and (optionally) set up Telegram in **Settings**.
 
-Додека прозорецот со `python app.py` е отворен, апликацијата сама проверува на секои 20 минути (ова се менува во Поставки).
-
-## Што има
-
-- **Огласи**: картички со слика, цена, m², соби и €/m². **Отвори оглас ↗** те носи на огласот на reklama5 и го означува како видено.
-  - Новите огласи имаат портокалова ознака **НОВ**, а нивниот број се гледа во менито.
-  - Секој оглас може да го ставиш во **★ Омилени** или да го **сокриеш (✕)**.
-  - Огласите можеш да ги подредиш по најнови, најевтини, најскапи или најголеми.
-- **Филтри**: колку сакаш пребарувања (град, категорија, цена, m², соби, зборови што мора да ги има или да ги нема). Првиот филтер е веќе внесен: Станови Битола, 25.000–60.000 €.
-- **Поставки**: Telegram или ntfy за нотификации, со копче за тест порака.
-
-## Telegram нотификации
-
-1. Во Telegram отвори **@BotFather**, напиши `/newbot` и копирај го токенот.
-2. Отвори го својот бот и напиши му било што.
-3. Отвори `https://api.telegram.org/bot<ТОКЕН>/getUpdates` и копирај го бројот од `"chat":{"id": …`.
-4. Внеси ги токенот и бројот во **Поставки**, па кликни **Зачувај и прати тест**.
-
-## Добро да знаеш
-
-- При првата проверка на нов филтер, постоечките огласи само се прикажуваат, без нотификации. Нотификација добиваш само за огласи што ќе излезат после тоа.
-- Податоците се чуваат во `reklama5.db` (SQLite). Ако ја избришеш, почнуваш одново.
-- Ако сакаш да работи постојано, остави го компјутерот вклучен. Во Windows можеш да ја додадеш во Task Scheduler при најава (`pythonw app.py`).
+> The database (`reklama5.db`) is not included in the repo because it stores the Telegram bot token.
