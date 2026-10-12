@@ -1,0 +1,13 @@
+# база со Telegram токен
+*.db
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# генерирани фајлови
+oglasi.xlsx
+
+# VS Code
+.vscode/

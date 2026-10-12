@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Филтри{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Филтри</h1>
+    <p class="muted">Секој филтер е посебно пребарување што се проверува автоматски.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('search_form') }}">+ Нов филтер</a>
+</div>
+
+<div class="list">
+  {% for s in searches %}
+  <div class="row {{ 'off' if not s.active }}">
+    <div class="row-main">
+      <h3>
+        <a href="{{ url_for('index', search=s.id) }}">{{ s.name }}</a>
+        {% if not s.active %}<span class="tag">паузиран</span>{% endif %}
+        {% if not s.notify %}<span class="tag">без нотификации</span>{% endif %}
+      </h3>
+      <div class="chips">
+        <span class="chip">{{ CATEGORIES.get(s.category_id, 'Категорија ' ~ s.category_id) }}</span>
+        <span class="chip">{{ CITIES.get(s.city_id, 'Цела Македонија') }}</span>
+        {% if s.price_min or s.price_max %}
+          <span class="chip">{{ s.price_min or 0 }} – {{ s.price_max or '∞' }} €</span>
+        {% endif %}
+        {% if s.m2_min or s.m2_max %}
+          <span class="chip">{{ '%g'|format(s.m2_min or 0) }} – {{ '%g'|format(s.m2_max) if s.m2_max else '∞' }} m²</span>
+        {% endif %}
+        {% if s.rooms_min or s.rooms_max %}
+          <span class="chip">{{ '%g'|format(s.rooms_min or 0) }} – {{ '%g'|format(s.rooms_max) if s.rooms_max else '∞' }} соби</span>
+        {% endif %}
+        {% if s.include_words %}<span class="chip chip-soft">+ {{ s.include_words }}</span>{% endif %}
+        {% if s.exclude_words %}<span class="chip chip-soft">− {{ s.exclude_words }}</span>{% endif %}
+      </div>
+      <p class="muted small">
+        {{ counts.get(s.id, 0) }} огласи
+        {% if s.last_checked %} · проверено {{ s.last_checked }}{% endif %}
+        · <a href="{{ search_url(s) }}" target="_blank" rel="noopener">отвори на reklama5 ↗</a>
+      </p>
+    </div>
+    <div class="row-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('search_form', search_id=s.id) }}">Измени</a>
+      <form method="post" action="{{ url_for('search_toggle', search_id=s.id) }}">
+        <button class="btn btn-ghost btn-sm">{{ 'Пушти' if not s.active else 'Паузирај' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('search_delete', search_id=s.id) }}"
+            onsubmit="return confirm('Да се избрише „{{ s.name }}“?')">
+        <button class="btn btn-danger btn-sm">Избриши</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty"><p>Немаш филтри. Додај прв!</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Поставки{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Поставки</h1>
+    <p class="muted">Нотификации на телефон и колку често да се проверува.</p>
+  </div>
+</div>
+
+<form method="post" class="form card-plain">
+  <label class="field narrow">
+    <span>Проверувај на секои (минути)</span>
+    <input type="number" name="interval_min" min="5" max="1440" value="{{ s.interval_min }}">
+  </label>
+
+  <fieldset>
+    <legend>Telegram</legend>
+    <ol class="help muted">
+      <li>Во Telegram отвори <b>@BotFather</b> → <code>/newbot</code> → копирај го <b>токенот</b>.</li>
+      <li>Отвори го твојот бот и напиши му било што.</li>
+      <li>Отвори <code>https://api.telegram.org/bot&lt;ТОКЕН&gt;/getUpdates</code> и копирај го бројот од <code>"chat":{"id": …</code></li>
+    </ol>
+    <label class="field">
+      <span>Bot token</span>
+      <input type="password" name="telegram_token" autocomplete="off" value="{{ s.telegram_token }}" placeholder="123456:ABC-DEF…">
+    </label>
+    <label class="field narrow">
+      <span>Chat ID</span>
+      <input type="text" name="telegram_chat_id" value="{{ s.telegram_chat_id }}" placeholder="123456789">
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>ntfy <span class="muted">(опционално, наместо или покрај Telegram)</span></legend>
+    <p class="help muted">Инсталирај ја апликацијата <b>ntfy</b>, претплати се на тајна тема и внеси ја тука.</p>
+    <label class="field narrow">
+      <span>Тема</span>
+      <input type="text" name="ntfy_topic" value="{{ s.ntfy_topic }}" placeholder="dejan-stanovi-x7k2">
+    </label>
+  </fieldset>
+
+  <div class="form-actions">
+    <button class="btn btn-ghost" name="test" value="1">Зачувај и прати тест</button>
+    <button class="btn btn-primary">Зачувај</button>
+  </div>
+</form>
+{% endblock %}

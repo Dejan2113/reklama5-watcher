@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Огласи</h1>
+    <p class="muted">{{ ads|length }} огласи{% if view == 'new' %} · само нови{% endif %}</p>
+  </div>
+  <div class="actions">
+    {% if new_total %}
+    <form method="post" action="{{ url_for('mark_all_seen') }}">
+      <button class="btn btn-ghost">Означи ги сите како видени</button>
+    </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('check_now') }}">
+      {% if search_id %}<input type="hidden" name="search_id" value="{{ search_id }}">{% endif %}
+      <button class="btn btn-primary">↻ Провери сега</button>
+    </form>
+  </div>
+</div>
+
+<div class="tabs">
+  <a href="{{ url_for('index', view=view, sort=sort) }}" class="tab {{ 'active' if not search_id }}">Сите</a>
+  {% for s in searches %}
+    <a href="{{ url_for('index', search=s.id, view=view, sort=sort) }}"
+       class="tab {{ 'active' if search_id == s.id }} {{ 'off' if not s.active }}">
+      {{ s.name }} <span class="count">{{ counts.get(s.id, 0) }}</span>
+    </a>
+  {% endfor %}
+  <a href="{{ url_for('search_form') }}" class="tab tab-add">+ Нов филтер</a>
+</div>
+
+<div class="toolbar">
+  <div class="seg">
+    {% for key, label in [('all','Сите'), ('new','Нови'), ('fav','★ Омилени'), ('hidden','Сокриени')] %}
+      <a href="{{ url_for('index', search=search_id, view=key, sort=sort) }}" class="{{ 'active' if view == key }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  <form method="get" class="sort">
+    {% if search_id %}<input type="hidden" name="search" value="{{ search_id }}">{% endif %}
+    <input type="hidden" name="view" value="{{ view }}">
+    <label class="muted" for="sort">Подреди:</label>
+    <select id="sort" name="sort" onchange="this.form.submit()">
+      <option value="newest" {{ 'selected' if sort == 'newest' }}>Најнови</option>
+      <option value="price_asc" {{ 'selected' if sort == 'price_asc' }}>Најевтини</option>
+      <option value="price_desc" {{ 'selected' if sort == 'price_desc' }}>Најскапи</option>
+      <option value="m2" {{ 'selected' if sort == 'm2' }}>Најголеми</option>
+    </select>
+  </form>
+</div>
+
+{% if not ads %}
+  <div class="empty">
+    {% if status.running %}
+      <p><span class="dot dot-live"></span> Се вчитуваат огласите… освежи за неколку секунди.</p>
+    {% elif view == 'new' %}
+      <p>Нема нови огласи. Ќе добиеш нотификација кога ќе излезе нешто.</p>
+    {% else %}
+      <p>Уште нема огласи. Кликни <b>Провери сега</b> или додај филтер.</p>
+    {% endif %}
+  </div>
+{% else %}
+<div class="grid">
+  {% for ad in ads %}
+  <article class="card {{ 'is-new' if ad.is_new }}">
+    <a class="thumb" href="{{ url_for('open_ad', search_id=ad.search_id, ad_id=ad.id) }}" target="_blank" rel="noopener">
+      <span class="noimg">⌂</span>
+      {% if ad.image %}
+        <img src="{{ ad.image }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">
+      {% endif %}
+      {% if ad.is_new %}<span class="badge">НОВ</span>{% endif %}
+      {% if ad.promoted %}<span class="badge badge-promo">Промовиран</span>{% endif %}
+    </a>
+    <div class="card-body">
+      <div class="price">{{ ad.price_text or 'По договор' }}</div>
+      <h3><a href="{{ url_for('open_ad', search_id=ad.search_id, ad_id=ad.id) }}" target="_blank" rel="noopener">{{ ad.title }}</a></h3>
+      <div class="chips">
+        {% if ad.m2 %}<span class="chip">{{ '%g'|format(ad.m2) }} m²</span>{% endif %}
+        {% if ad.rooms %}<span class="chip">{{ '%g'|format(ad.rooms) }} соби</span>{% endif %}
+        {% if ad.price and ad.m2 and ad.currency == 'EUR' %}
+          <span class="chip chip-soft">{{ '{:,.0f}'.format(ad.price / ad.m2).replace(',', '.') }} €/m²</span>
+        {% endif %}
+      </div>
+      {% if ad.description %}<p class="desc">{{ ad.description }}</p>{% endif %}
+      <div class="meta muted">
+        {{ ad.city }}{% if ad.posted %} · {{ ad.posted }}{% endif %}
+        {% if not search_id %} · {{ ad.search_name }}{% endif %}
+      </div>
+    </div>
+    <div class="card-actions">
+      <a class="btn btn-primary btn-sm" href="{{ url_for('open_ad', search_id=ad.search_id, ad_id=ad.id) }}" target="_blank" rel="noopener">Отвори оглас ↗</a>
+      <form method="post" action="{{ url_for('ad_action', search_id=ad.search_id, ad_id=ad.id, action='favorite') }}">
+        <button class="icon-btn {{ 'on' if ad.favorite }}" title="Омилен">★</button>
+      </form>
+      <form method="post" action="{{ url_for('ad_action', search_id=ad.search_id, ad_id=ad.id, action='hide') }}">
+        <button class="icon-btn" title="{{ 'Врати' if ad.hidden else 'Сокриј' }}">{{ '↺' if ad.hidden else '✕' }}</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if status.running %}<script>setTimeout(() => location.reload(), 5000)</script>{% endif %}
+{% endblock %}

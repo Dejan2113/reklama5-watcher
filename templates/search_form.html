@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Измени филтер' if s else 'Нов филтер' }}{% endblock %}
+{% block content %}
+
+{% macro num(name, placeholder='', step='any') -%}
+  <input type="number" name="{{ name }}" step="{{ step }}" min="0" placeholder="{{ placeholder }}"
+         value="{{ ('%g'|format(s[name])) if s and s[name] is not none else '' }}">
+{%- endmacro %}
+
+<div class="page-head">
+  <div>
+    <h1>{{ 'Измени филтер' if s else 'Нов филтер' }}</h1>
+    <p class="muted">Празно поле значи „без ограничување“.</p>
+  </div>
+</div>
+
+<form method="post" class="form card-plain">
+  <label class="field">
+    <span>Име</span>
+    <input type="text" name="name" required placeholder="на пр. Станови Битола"
+           value="{{ s.name if s else '' }}">
+  </label>
+
+  <div class="cols">
+    <label class="field">
+      <span>Категорија</span>
+      <select name="category_id">
+        {% for id, label in CATEGORIES.items() %}
+          <option value="{{ id }}" {{ 'selected' if (s and s.category_id == id) or (not s and id == 159) }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>Град</span>
+      <select name="city_id">
+        <option value="">Цела Македонија</option>
+        {% for id, label in CITIES.items() %}
+          <option value="{{ id }}" {{ 'selected' if (s and s.city_id == id) or (not s and id == 2) }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <fieldset>
+    <legend>Цена (€)</legend>
+    <div class="cols">
+      <label class="field"><span>Од</span>{{ num('price_min', '25000', '1') }}</label>
+      <label class="field"><span>До</span>{{ num('price_max', '60000', '1') }}</label>
+    </div>
+  </fieldset>
+
+  <div class="cols">
+    <fieldset>
+      <legend>Квадратура (m²)</legend>
+      <div class="cols">
+        <label class="field"><span>Од</span>{{ num('m2_min', '40') }}</label>
+        <label class="field"><span>До</span>{{ num('m2_max', '90') }}</label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Број на соби</legend>
+      <div class="cols">
+        <label class="field"><span>Од</span>{{ num('rooms_min', '2', '0.5') }}</label>
+        <label class="field"><span>До</span>{{ num('rooms_max', '4', '0.5') }}</label>
+      </div>
+    </fieldset>
+  </div>
+
+  <label class="field">
+    <span>Мора да содржи барем еден од зборовите <em class="muted">(одвоени со запирка)</em></span>
+    <input type="text" name="include_words" placeholder="на пр. центар, лифт, тераса"
+           value="{{ s.include_words if s else '' }}">
+  </label>
+  <label class="field">
+    <span>Прескокни огласи што содржат <em class="muted">(одвоени со запирка)</em></span>
+    <input type="text" name="exclude_words" placeholder="на пр. изнајмува, издава"
+           value="{{ s.exclude_words if s else 'изнајмува, издава, iznajmuva, izdava' }}">
+  </label>
+
+  <div class="checks">
+    <label><input type="checkbox" name="only_sale" {{ 'checked' if not s or s.only_sale }}> Само продажба</label>
+    <label><input type="checkbox" name="skip_promoted" {{ 'checked' if s and s.skip_promoted }}> Прескокни промовирани</label>
+    <label><input type="checkbox" name="notify" {{ 'checked' if not s or s.notify }}> Нотификација на телефон</label>
+    <label><input type="checkbox" name="active" {{ 'checked' if not s or s.active }}> Активен</label>
+  </div>
+
+  <label class="field narrow">
+    <span>Максимум страници за проверка</span>
+    <input type="number" name="max_pages" min="1" max="20" value="{{ s.max_pages if s else 5 }}">
+  </label>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{{ url_for('searches') }}">Откажи</a>
+    <button class="btn btn-primary">Зачувај</button>
+  </div>
+</form>
+{% endblock %}
